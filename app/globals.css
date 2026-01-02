@@ -1,0 +1,255 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primary Colors (Neon Green) */
+    --color-primary-50: #f0fff4;
+    --color-primary-100: #dcfce7;
+    --color-primary-200: #bbf7d0;
+    --color-primary-300: #86efac;
+    --color-primary-400: #4ade80;
+    --color-primary-500: #00ff41;
+    --color-primary-600: #00cc33;
+    --color-primary-700: #009926;
+    --color-primary-800: #006619;
+    --color-primary-900: #00330c;
+
+    /* Secondary Colors (Neon Red) */
+    --color-secondary-50: #fff1f2;
+    --color-secondary-100: #ffe4e6;
+    --color-secondary-200: #fecdd3;
+    --color-secondary-300: #fda4af;
+    --color-secondary-400: #fb7185;
+    --color-secondary-500: #ff0040;
+    --color-secondary-600: #cc0033;
+    --color-secondary-700: #990026;
+    --color-secondary-800: #66001a;
+    --color-secondary-900: #33000d;
+
+    /* Accent Colors (Neon Cyan) */
+    --color-accent-50: #ecfeff;
+    --color-accent-100: #cffafe;
+    --color-accent-200: #a5f3fc;
+    --color-accent-300: #67e8f9;
+    --color-accent-400: #22d3ee;
+    --color-accent-500: #00ffff;
+    --color-accent-600: #00cccc;
+    --color-accent-700: #009999;
+    --color-accent-800: #006666;
+    --color-accent-900: #003333;
+
+    /* Background Colors */
+    --color-bg-primary: #0a0a0a;
+    --color-bg-secondary: #111111;
+    --color-bg-tertiary: #1a1a1a;
+    --color-bg-elevated: #222222;
+
+    /* Text Colors */
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #e0e0e0;
+    --color-text-tertiary: #b0b0b0;
+    --color-text-inverse: #0a0a0a;
+
+    /* Status Colors */
+    --color-success: #00ff41;
+    --color-error: #ff0040;
+    --color-warning: #ffaa00;
+    --color-info: #00ffff;
+
+    /* Font Families */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'Fira Code', 'Courier New', monospace;
+    --font-display: 'Orbitron', sans-serif;
+
+    /* Spacing */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+    --space-24: 6rem;
+
+    /* Border Radius */
+    --radius-none: 0;
+    --radius-sm: 0.125rem;
+    --radius-md: 0.25rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-full: 9999px;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+    --transition-slow: 350ms ease;
+  }
+
+  * {
+    @apply border-background-tertiary;
+  }
+
+  body {
+    @apply bg-background-primary text-text-primary font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Glitch Animation */
+  @keyframes glitch {
+    0%, 100% {
+      transform: translate(0);
+    }
+    20% {
+      transform: translate(-2px, 2px);
+    }
+    40% {
+      transform: translate(-2px, -2px);
+    }
+    60% {
+      transform: translate(2px, 2px);
+    }
+    80% {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  /* Typing Animation */
+  @keyframes typing {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  /* Pulse Neon Animation */
+  @keyframes pulse-neon {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+    }
+    50% {
+      opacity: 0.8;
+      box-shadow: 0 0 20px rgba(0, 255, 65, 0.8);
+    }
+  }
+
+  /* Slide In Animation */
+  @keyframes slide-in {
+    from {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Fade In Animation */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .glitch-text {
+    animation: glitch 0.3s infinite;
+  }
+
+  .typing-effect {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typing 3s steps(40, end);
+  }
+
+  .pulse-neon {
+    animation: pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+
+  .fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  /* Neon Glow Effects */
+  .glow-green {
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.5),
+                0 0 20px rgba(0, 255, 65, 0.3),
+                0 0 30px rgba(0, 255, 65, 0.1);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 10px rgba(255, 0, 64, 0.5),
+                0 0 20px rgba(255, 0, 64, 0.3),
+                0 0 30px rgba(255, 0, 64, 0.1);
+  }
+
+  .glow-cyan {
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5),
+                0 0 20px rgba(0, 255, 255, 0.3),
+                0 0 30px rgba(0, 255, 255, 0.1);
+  }
+
+  /* Terminal Style */
+  .terminal {
+    @apply bg-background-secondary border border-primary-500 rounded-lg p-4 font-mono;
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+  }
+
+  .terminal-prompt {
+    @apply text-primary-500;
+  }
+
+  .terminal-command {
+    @apply text-text-primary;
+  }
+
+  .terminal-output {
+    @apply text-text-secondary;
+  }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary-500 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary-400;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

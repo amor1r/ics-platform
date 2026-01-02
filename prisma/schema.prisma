@@ -1,0 +1,438 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum ProjectCategory {
+  TOOLS
+  KALI_LINUX
+  COMMANDS
+  GENERAL_CYBER
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ActivityType {
+  LOGIN
+  LOGOUT
+  PROJECT_CREATE
+  PROJECT_UPDATE
+  PROJECT_DELETE
+  USER_BAN
+  USER_UNBAN
+  ADMIN_INVITE
+  ROLE_CHANGE
+  PASSWORD_CHANGE
+  PROFILE_UPDATE
+  COMMENT_CREATE
+  COMMENT_DELETE
+  LIKE_CREATE
+  LIKE_DELETE
+}
+
+enum ContentType {
+  MANUAL
+  TUTORIAL
+  GUIDE
+  CTF
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CTFDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String    @map("password_hash")
+  role          UserRole  @default(USER)
+  avatar        String?
+  birthdate     DateTime?
+  emailVerified Boolean   @default(false) @map("email_verified")
+  isBanned      Boolean   @default(false) @map("is_banned")
+  bannedAt      DateTime? @map("banned_at")
+  bannedBy      String?   @map("banned_by")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  authoredContent    Content[]        @relation("ContentAuthor")
+  authoredProjects   Project[]
+  uploadedFiles      File[]
+  comments           Comment[]
+  bookmarks          Bookmark[]
+  progress           UserProgress[]
+  ctfSubmissions     CTFSubmission[]
+  notifications      Notification[]
+  sessions           Session[]
+  passwordResets     PasswordReset[]
+  createdInvites     AdminInvite[]    @relation("InviteCreator")
+  activityLogs       ActivityLog[]
+  projectLikes       ProjectLike[]
+  bannedByUser       User?            @relation("UserBans", fields: [bannedBy], references: [id])
+  bannedUsers        User[]           @relation("UserBans")
+
+  @@map("users")
+}
+
+model Project {
+  id            String          @id @default(cuid())
+  title         String
+  slug          String          @unique
+  description   String          @db.Text
+  content       String          @db.Text
+  category      ProjectCategory
+  authorId      String          @map("author_id")
+  status        ProjectStatus   @default(DRAFT)
+  allowComments Boolean         @default(true) @map("allow_comments")
+  allowLikes    Boolean         @default(true) @map("allow_likes")
+  views         Int             @default(0)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  author        User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments      Comment[]
+  likes         ProjectLike[]
+  files         ProjectFile[]
+
+  @@index([authorId])
+  @@index([category])
+  @@index([status])
+  @@index([slug])
+  @@index([createdAt])
+  @@map("projects")
+}
+
+model ProjectLike {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_likes")
+}
+
+model ProjectFile {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+  filename  String
+  path      String
+  size      Int
+  mimeType  String   @map("mime_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("project_files")
+}
+
+model ActivityLog {
+  id          String       @id @default(cuid())
+  userId      String       @map("user_id")
+  type        ActivityType
+  action      String
+  details     Json?
+  ipAddress   String?      @map("ip_address")
+  userAgent   String?      @map("user_agent")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model AdminInvite {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  email       String
+  createdById String   @map("created_by_id")
+  expiresAt   DateTime @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  createdBy   User     @relation("InviteCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([email])
+  @@index([expiresAt])
+  @@map("admin_invites")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  token        String   @unique
+  refreshToken String   @unique @map("refresh_token")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([refreshToken])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_resets")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  icon        String?
+  parentId    String?   @map("parent_id")
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[]  @relation("CategoryHierarchy")
+  content  Content[]
+
+  @@map("categories")
+}
+
+model Content {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?
+  content     String        @db.Text
+  categoryId  String?       @map("category_id")
+  authorId    String        @map("author_id")
+  type        ContentType
+  status      ContentStatus @default(DRAFT)
+  views       Int           @default(0)
+  rating      Float         @default(0)
+  ratingCount Int           @default(0) @map("rating_count")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  category    Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author      User          @relation("ContentAuthor", fields: [authorId], references: [id])
+  files       File[]
+  comments    Comment[]
+  bookmarks   Bookmark[]
+  progress    UserProgress[]
+  relatedTool Tool?
+
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([type])
+  @@index([status])
+  @@index([slug])
+  @@map("content")
+}
+
+model File {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String   @map("original_name")
+  path         String
+  size         Int
+  mimeType     String   @map("mime_type")
+  uploaderId   String   @map("uploader_id")
+  contentId    String?  @map("content_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  uploader User     @relation(fields: [uploaderId], references: [id])
+  content  Content? @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([uploaderId])
+  @@index([contentId])
+  @@map("files")
+}
+
+model CTFChallenge {
+  id          String        @id @default(cuid())
+  title       String
+  description String        @db.Text
+  difficulty  CTFDifficulty
+  category    String
+  flag        String
+  points      Int           @default(100)
+  files       String[]      @default([])
+  hints       String[]      @default([])
+  solvedCount Int           @default(0) @map("solved_count")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  submissions CTFSubmission[]
+
+  @@index([difficulty])
+  @@index([category])
+  @@map("ctf_challenges")
+}
+
+model CTFSubmission {
+  id          String   @id @default(cuid())
+  challengeId String   @map("challenge_id")
+  userId      String   @map("user_id")
+  flag        String
+  isCorrect   Boolean  @default(false) @map("is_correct")
+  submittedAt DateTime @default(now()) @map("submitted_at")
+
+  // Relations
+  challenge CTFChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId, isCorrect])
+  @@index([challengeId])
+  @@index([userId])
+  @@map("ctf_submissions")
+}
+
+model Tool {
+  id               String  @id @default(cuid())
+  name             String  @unique
+  description      String? @db.Text
+  category         String
+  usageExamples    String? @db.Text @map("usage_examples")
+  documentation    String? @db.Text
+  relatedContentId String? @unique @map("related_content_id")
+
+  // Relations
+  relatedContent Content? @relation(fields: [relatedContentId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@map("tools")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  contentId String?  @map("content_id")
+  projectId String?  @map("project_id")
+  userId    String   @map("user_id")
+  comment   String   @db.Text
+  parentId  String?  @map("parent_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  content  Content?  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  project  Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([contentId])
+  @@index([projectId])
+  @@index([userId])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  contentId String   @map("content_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId])
+  @@index([userId])
+  @@index([contentId])
+  @@map("bookmarks")
+}
+
+model UserProgress {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  contentId        String   @map("content_id")
+  completed        Boolean  @default(false)
+  progressPercentage Int    @default(0) @map("progress_percentage")
+  lastAccessed     DateTime @default(now()) @map("last_accessed")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId])
+  @@index([userId])
+  @@index([contentId])
+  @@map("user_progress")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  title     String
+  message   String   @db.Text
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@map("notifications")
+}
